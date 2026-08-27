@@ -3,6 +3,7 @@ import { X, Upload, Trash2, ImagePlus, LoaderCircle } from "lucide-react";
 import type { PropertyResponse } from "../../types/api";
 import { uploadPropertyImages, deletePropertyImage } from "../../api/propertyApi";
 import { getApiErrorMessage } from "../../api/error";
+import { getImageUrl } from "../../utils/imageUrl";
 
 interface ImageUploadModalProps {
     property: PropertyResponse;
@@ -118,7 +119,7 @@ export function ImageUploadModal({
                                 {existingImages.map((url, idx) => (
                                     <div key={`existing-img-${idx}`} className="gallery-thumb-item" style={{ position: "relative", height: "85px" }}>
                                         <img
-                                            src={url}
+                                            src={getImageUrl(url)}
                                             alt={`Property ${idx + 1}`}
                                             style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "var(--radius-sm)" }}
                                         />

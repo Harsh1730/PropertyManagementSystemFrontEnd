@@ -18,6 +18,7 @@ import type { PropertyReviewSummaryResponse } from "../../types/review";
 import { getPropertyReviews, addPropertyReview } from "../../api/reviewApi";
 import { getApiErrorMessage } from "../../api/error";
 import { useAuth } from "../../context/useAuth";
+import { getImageUrl } from "../../utils/imageUrl";
 
 interface PropertyDetailModalProps {
     property: PropertyResponse;
@@ -136,7 +137,7 @@ export function PropertyDetailModal({
                         <div className="property-gallery-container">
                             <div className="gallery-main-viewer">
                                 <img
-                                    src={images[activeImageIndex]}
+                                    src={getImageUrl(images[activeImageIndex])}
                                     alt={`${property.propertyName} view ${activeImageIndex + 1}`}
                                     className="gallery-main-img"
                                 />
@@ -174,7 +175,7 @@ export function PropertyDetailModal({
                                             className={`gallery-thumb-box ${idx === activeImageIndex ? "active" : ""}`}
                                             onClick={() => setActiveImageIndex(idx)}
                                         >
-                                            <img src={url} alt={`Thumb ${idx + 1}`} />
+                                            <img src={getImageUrl(url)} alt={`Thumb ${idx + 1}`} />
                                         </div>
                                     ))}
                                 </div>

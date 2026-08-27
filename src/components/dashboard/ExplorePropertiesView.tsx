@@ -18,6 +18,7 @@ import { createBooking } from "../../api/bookingApi";
 import { getApiErrorMessage } from "../../api/error";
 import { PropertyDetailModal } from "./PropertyDetailModal";
 import { OwnerReviewModal } from "./OwnerReviewModal";
+import { getImageUrl } from "../../utils/imageUrl";
 
 const propertyTypes: PropertyType[] = ["FLAT", "HOUSE", "ROOM", "PG"];
 
@@ -257,7 +258,7 @@ export function ExplorePropertiesView({
                                     style={{ cursor: "pointer" }}
                                 >
                                     {firstImage ? (
-                                        <img src={firstImage} alt={prop.propertyName} className="card-banner-img" />
+                                        <img src={getImageUrl(firstImage)} alt={prop.propertyName} className="card-banner-img" />
                                     ) : (
                                         <div className="card-banner-placeholder">
                                             <Building2 size={38} color="var(--primary)" style={{ opacity: 0.8 }} />

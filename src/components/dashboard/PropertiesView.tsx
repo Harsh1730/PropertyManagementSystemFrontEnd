@@ -17,6 +17,7 @@ import { createProperty } from "../../api/propertyApi";
 import { getApiErrorMessage } from "../../api/error";
 import { PropertyDetailModal } from "./PropertyDetailModal";
 import { ImageUploadModal } from "./ImageUploadModal";
+import { getImageUrl } from "../../utils/imageUrl";
 
 const propertyTypes: PropertyType[] = ["FLAT", "HOUSE", "ROOM", "PG"];
 
@@ -267,7 +268,7 @@ export function PropertiesView({
                                     style={{ cursor: "pointer" }}
                                 >
                                     {firstImage ? (
-                                        <img src={firstImage} alt={prop.propertyName} className="card-banner-img" />
+                                        <img src={getImageUrl(firstImage)} alt={prop.propertyName} className="card-banner-img" />
                                     ) : (
                                         <div className="card-banner-placeholder">
                                             <Building2 size={36} color="var(--primary)" style={{ opacity: 0.8 }} />
