@@ -16,7 +16,7 @@ export const getImageUrl = (path?: string | null): string => {
         return path;
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL;
+    const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "https://propertymanagementsystem-production.up.railway.app" : "");
     if (apiUrl) {
         const baseUrl = apiUrl.replace(/\/+$/, "");
         const cleanPath = path.startsWith("/") ? path : `/${path}`;
