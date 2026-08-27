@@ -1,75 +1,80 @@
-# React + TypeScript + Vite
+# Property Management System Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A complete React + TypeScript frontend for your Spring Boot backend API.
 
-Currently, two official plugins are available:
+## What is implemented
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- JWT authentication:
+  - Register: POST /auth/register
+  - Login: POST /auth/login (handles plain text JWT response)
+  - Protected routes with token guard
+- Role-adaptive dashboard:
+  - Owner mode (auto-detected from /dashboard/owner)
+  - Tenant mode (fallback to /dashboard/tenant)
+- Full API-driven operational modules:
+  - Properties: create
+  - Leases: list, create, get by ID, terminate
+  - Payments: create, list my/owner, list by lease, rent status by lease
+  - Maintenance: create, list my/owner, update status (owner)
+- Centralized API error handling for backend error maps and validation responses.
+- Clean responsive UI for desktop and mobile.
 
-## React Compiler
+## Project structure highlights
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- src/api
+  - axios.ts: API client + auth header interceptor
+  - Authapi.ts, propertyApi.ts, leaseApi.ts, paymentApi.ts, maintenanceApi.ts
+  - error.ts: backend error parser
+- src/types
+  - api.ts: request/response and enum types for backend endpoints
+  - dashboard.ts: dashboard DTOs
+- src/pages
+  - login.tsx
+  - Register.tsx
+  - Dashboard.tsx
 
-## Expanding the ESLint configuration
+## Run locally
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Install dependencies:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. Optional: configure backend base URL (default is http://localhost:8080)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   Create a .env file in project root:
 
-```
+   VITE_API_BASE_URL=http://localhost:8080
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. Start development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+   npm run dev
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+4. Build for production:
 
-```
+   npm run build
+
+## Important backend constraints handled by frontend
+
+- Login returns raw token string, not JSON.
+- No tenant search/list endpoint exists in backend.
+- No property listing endpoint exists in backend.
+
+Because of this, lease and maintenance workflows require manual ID input where the backend does not provide discovery APIs.
+
+## Suggested testing flow
+
+1. Register tenant account.
+2. Login with owner account (seeded in backend DB) and create property.
+3. Create lease with propertyId + tenantId.
+4. Login as tenant and create payment for lease.
+5. Tenant creates maintenance request.
+6. Owner updates maintenance status.
+
+## Tech stack
+
+- React 19
+- TypeScript
+- Vite
+- Axios
+- React Router
+- Lucide React icons
