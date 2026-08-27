@@ -32,3 +32,8 @@ export const checkProtectedEndpoint = async (): Promise<{ message: string }> => 
     const response = await api.post<{ message: string }>("/auth/protected");
     return response.data;
 };
+
+export const deleteCurrentUserAccount = async (): Promise<{ message: string }> => {
+    const response = await api.delete<{ message: string }>("/auth/me");
+    return response.data;
+};

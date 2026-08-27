@@ -10,10 +10,12 @@ import {
     KeyRound,
     ImagePlus,
     Star,
-    Camera
+    Camera,
+    Trash2,
+    LoaderCircle
 } from "lucide-react";
 import type { CreatePropertyRequest, PropertyResponse, PropertyType } from "../../types/api";
-import { createProperty } from "../../api/propertyApi";
+import { createProperty, deleteProperty } from "../../api/propertyApi";
 import { getApiErrorMessage } from "../../api/error";
 import { PropertyDetailModal } from "./PropertyDetailModal";
 import { ImageUploadModal } from "./ImageUploadModal";
@@ -49,6 +51,26 @@ export function PropertiesView({
     // Modal states
     const [inspectingProperty, setInspectingProperty] = useState<PropertyResponse | null>(null);
     const [managePhotosProperty, setManagePhotosProperty] = useState<PropertyResponse | null>(null);
+    const [propertyToDelete, setPropertyToDelete] = useState<PropertyResponse | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleConfirmDeleteProperty = async () => {
+        if (!propertyToDelete) return;
+        setIsDeleting(true);
+        onSetError("");
+        onSetAlert("");
+        try {
+            await deleteProperty(propertyToDelete.id);
+            onSetAlert(`Property "${propertyToDelete.propertyName}" has been deleted successfully.`);
+            setPropertyToDelete(null);
+            setInspectingProperty(null);
+            onRefresh();
+        } catch (err) {
+            onSetError(getApiErrorMessage(err, "Failed to delete property."));
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     // Create Property Form State with Photos
     const [form, setForm] = useState<CreatePropertyRequest>({
@@ -379,6 +401,17 @@ export function PropertiesView({
                                             <ImagePlus size={14} />
                                             <span>Photos</span>
                                         </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm"
+                                            style={{ background: "rgba(239, 68, 68, 0.12)", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.3)" }}
+                                            onClick={() => setPropertyToDelete(prop)}
+                                            title="Delete Property"
+                                        >
+                                            <Trash2 size={13} />
+                                            <span>Delete</span>
+                                        </button>
                                     </div>
 
                                     {prop.status === "AVAILABLE" && onStartLeaseForProperty && (
@@ -632,6 +665,10 @@ export function PropertiesView({
                         setInspectingProperty(null);
                         setManagePhotosProperty(p);
                     }}
+                    onDeleteProperty={(p) => {
+                        setInspectingProperty(null);
+                        setPropertyToDelete(p);
+                    }}
                     onSetAlert={onSetAlert}
                     onSetError={onSetError}
                 />
@@ -649,6 +686,58 @@ export function PropertiesView({
                     onSetAlert={onSetAlert}
                     onSetError={onSetError}
                 />
+            )}
+
+            {/* Delete Property Confirmation Modal */}
+            {propertyToDelete && (
+                <div className="modal-backdrop" onClick={() => setPropertyToDelete(null)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+                        <div className="modal-header">
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ background: "rgba(239, 68, 68, 0.15)", padding: "8px", borderRadius: "50%", color: "#ef4444", display: "flex" }}>
+                                    <Trash2 size={20} />
+                                </div>
+                                <div>
+                                    <h3 style={{ fontSize: "17px", color: "#ef4444" }}>Delete Property</h3>
+                                    <span className="modal-subtitle" style={{ fontSize: "12px" }}>This action cannot be undone</span>
+                                </div>
+                            </div>
+                            <button type="button" className="modal-close-btn" onClick={() => setPropertyToDelete(null)}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                Are you sure you want to permanently delete <strong>"{propertyToDelete.propertyName}"</strong>?
+                            </p>
+                            <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "10px", background: "rgba(239, 68, 68, 0.08)", padding: "10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+                                ⚠️ All photos, reviews, maintenance records, and booking requests for this property will be permanently removed.
+                            </p>
+                        </div>
+
+                        <div className="modal-footer" style={{ justifyContent: "flex-end", gap: "10px" }}>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setPropertyToDelete(null)}
+                                disabled={isDeleting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-sm"
+                                style={{ background: "#ef4444", color: "#fff", border: "none" }}
+                                onClick={handleConfirmDeleteProperty}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? <LoaderCircle size={14} className="spinning" /> : <Trash2 size={14} />}
+                                <span>{isDeleting ? "Deleting..." : "Permanently Delete"}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

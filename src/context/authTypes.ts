@@ -21,6 +21,7 @@ export interface AuthContextType {
     setPortalMode: (mode: PortalMode) => void;
     login: (authData: LoginResponse | string) => void;
     logout: () => void;
+    deleteAccount: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

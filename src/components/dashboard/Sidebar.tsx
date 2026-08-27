@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     LayoutDashboard,
     Building2,
@@ -10,7 +11,11 @@ import {
     CalendarCheck,
     MessageSquare,
     Briefcase,
-    UserCheck
+    UserCheck,
+    Trash2,
+    X,
+    LoaderCircle,
+    AlertTriangle
 } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
@@ -44,7 +49,21 @@ export function Sidebar({
     onSectionChange,
     badgeCounts,
 }: SidebarProps) {
-    const { logout, userEmail, userName, portalMode, setPortalMode } = useAuth();
+    const { logout, deleteAccount, userEmail, userName, portalMode, setPortalMode } = useAuth();
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
+
+    const handleDeleteAccount = async () => {
+        setDeleting(true);
+        setDeleteError("");
+        try {
+            await deleteAccount();
+        } catch (err: unknown) {
+            setDeleteError("Failed to delete account. Please try again.");
+            setDeleting(false);
+        }
+    };
 
     const ownerMenuItems = [
         { key: "overview" as DashboardSection, name: "Overview", icon: LayoutDashboard },
@@ -180,28 +199,116 @@ export function Sidebar({
                         </div>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={logout}
-                        title="Sign Out"
-                        style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "var(--text-muted)",
-                            padding: "6px",
-                            borderRadius: "var(--radius-xs)",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
-                    >
-                        <LogOut size={15} />
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                        <button
+                            type="button"
+                            onClick={() => setShowDeleteModal(true)}
+                            title="Delete Account"
+                            style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "var(--text-muted)",
+                                padding: "6px",
+                                borderRadius: "var(--radius-xs)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                        >
+                            <Trash2 size={14} />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={logout}
+                            title="Sign Out"
+                            style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "var(--text-muted)",
+                                padding: "6px",
+                                borderRadius: "var(--radius-xs)",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--danger)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                        >
+                            <LogOut size={15} />
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Delete Account Danger Modal */}
+            {showDeleteModal && (
+                <div className="modal-backdrop" onClick={() => !deleting && setShowDeleteModal(false)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px" }}>
+                        <div className="modal-header">
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ background: "rgba(239, 68, 68, 0.15)", padding: "8px", borderRadius: "50%", color: "#ef4444", display: "flex" }}>
+                                    <AlertTriangle size={22} />
+                                </div>
+                                <div>
+                                    <h3 style={{ fontSize: "17px", color: "#ef4444" }}>Delete Account</h3>
+                                    <span className="modal-subtitle" style={{ fontSize: "12px" }}>Permanent Action</span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="modal-close-btn"
+                                onClick={() => !deleting && setShowDeleteModal(false)}
+                                disabled={deleting}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                                Are you sure you want to permanently delete your account (<strong>{userEmail}</strong>)?
+                            </p>
+                            <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "var(--radius-sm)", padding: "12px", marginTop: "12px" }}>
+                                <p style={{ fontSize: "12px", color: "#f87171", margin: 0, lineHeight: 1.4 }}>
+                                    ⚠️ <strong>Warning:</strong> All your properties, active/past leases, rent records, reviews, maintenance tickets, and chat messages will be permanently erased. This cannot be undone.
+                                </p>
+                            </div>
+
+                            {deleteError && (
+                                <p style={{ color: "var(--danger)", fontSize: "13px", marginTop: "10px" }}>
+                                    {deleteError}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="modal-footer" style={{ justifyContent: "flex-end", gap: "10px" }}>
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-sm"
+                                style={{ background: "#ef4444", color: "#fff", border: "none" }}
+                                onClick={handleDeleteAccount}
+                                disabled={deleting}
+                            >
+                                {deleting ? <LoaderCircle size={14} className="spinning" /> : <Trash2 size={14} />}
+                                <span>{deleting ? "Deleting Account..." : "Permanently Delete Account"}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </aside>
     );
 }

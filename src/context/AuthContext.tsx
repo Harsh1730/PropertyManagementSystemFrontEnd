@@ -1,6 +1,7 @@
 import { useState, useMemo, type ReactNode } from "react";
 import { AuthContext, type PortalMode, type UserInfo } from "./authTypes";
 import type { LoginResponse, UserRole } from "../types/api";
+import { deleteCurrentUserAccount } from "../api/Authapi";
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -31,7 +32,7 @@ function getStoredUser(): UserInfo | null {
 export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
     const [user, setUser] = useState<UserInfo | null>(getStoredUser);
-    
+
     const [portalMode, setPortalModeState] = useState<PortalMode>(() => {
         const saved = localStorage.getItem("portalMode");
         if (saved === "tenant" || saved === "owner") return saved;
@@ -94,6 +95,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setPortalModeState("owner");
     };
 
+    const deleteAccount = async () => {
+        try {
+            await deleteCurrentUserAccount();
+        } finally {
+            logout();
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -107,6 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setPortalMode,
                 login,
                 logout,
+                deleteAccount,
             }}
         >
             {children}

@@ -94,4 +94,12 @@ export const deletePropertyImage = async (
     return response.data;
 };
 
+export const deleteProperty = async (
+    id: number
+): Promise<{ message: string }> => {
+    const response = await api.delete<{ message: string }>(`/properties/${id}`);
+    return response.data;
+};
+
+
 

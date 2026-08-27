@@ -11,11 +11,14 @@ import {
     ChevronRight,
     ImagePlus,
     Send,
-    MessageCircle
+    MessageCircle,
+    Trash2,
+    LoaderCircle
 } from "lucide-react";
 import type { PropertyResponse } from "../../types/api";
 import type { PropertyReviewSummaryResponse } from "../../types/review";
 import { getPropertyReviews, addPropertyReview } from "../../api/reviewApi";
+import { deletePropertyImage } from "../../api/propertyApi";
 import { getApiErrorMessage } from "../../api/error";
 import { useAuth } from "../../context/useAuth";
 import { getImageUrl } from "../../utils/imageUrl";
@@ -27,6 +30,7 @@ interface PropertyDetailModalProps {
     onOpenChat: (otherUserId: number, otherUserName: string, propertyId?: number, propertyName?: string) => void;
     onOpenManagePhotos?: (property: PropertyResponse) => void;
     onOpenRateLandlord?: (ownerId: number, ownerName: string) => void;
+    onDeleteProperty?: (property: PropertyResponse) => void;
     onSetAlert: (msg: string) => void;
     onSetError: (msg: string) => void;
 }
@@ -38,6 +42,7 @@ export function PropertyDetailModal({
     onOpenChat,
     onOpenManagePhotos,
     onOpenRateLandlord,
+    onDeleteProperty,
     onSetAlert,
     onSetError,
 }: PropertyDetailModalProps) {
@@ -53,7 +58,39 @@ export function PropertyDetailModal({
     const [commentInput, setCommentInput] = useState("");
     const [submittingReview, setSubmittingReview] = useState(false);
 
-    const images = property.imageUrls || [];
+    const [localImages, setLocalImages] = useState<string[]>(property.imageUrls || []);
+    const [deletingPhoto, setDeletingPhoto] = useState(false);
+
+    useEffect(() => {
+        setLocalImages(property.imageUrls || []);
+    }, [property.imageUrls]);
+
+    const images = localImages;
+
+    const handleDeleteActivePhoto = async () => {
+        if (images.length === 0) return;
+        const currentUrl = images[activeImageIndex];
+        const parts = currentUrl.split("/");
+        const imageId = Number(parts[parts.length - 1]);
+        if (!imageId) return;
+
+        if (!window.confirm("Are you sure you want to delete this photo?")) return;
+
+        setDeletingPhoto(true);
+        onSetError("");
+        onSetAlert("");
+        try {
+            await deletePropertyImage(imageId);
+            const remaining = images.filter((_, idx) => idx !== activeImageIndex);
+            setLocalImages(remaining);
+            setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : 0));
+            onSetAlert("Photo deleted successfully.");
+        } catch (err) {
+            onSetError(getApiErrorMessage(err, "Failed to delete photo."));
+        } finally {
+            setDeletingPhoto(false);
+        }
+    };
 
     const fetchReviews = async () => {
         try {
@@ -135,12 +172,41 @@ export function PropertyDetailModal({
                     {/* Image Gallery Hero */}
                     {images.length > 0 ? (
                         <div className="property-gallery-container">
-                            <div className="gallery-main-viewer">
+                            <div className="gallery-main-viewer" style={{ position: "relative" }}>
                                 <img
                                     src={getImageUrl(images[activeImageIndex])}
                                     alt={`${property.propertyName} view ${activeImageIndex + 1}`}
                                     className="gallery-main-img"
                                 />
+
+                                {isOwnerOfThis && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteActivePhoto}
+                                        disabled={deletingPhoto}
+                                        style={{
+                                            position: "absolute",
+                                            top: "10px",
+                                            right: "10px",
+                                            background: "rgba(239, 68, 68, 0.88)",
+                                            border: "none",
+                                            color: "#fff",
+                                            borderRadius: "var(--radius-sm)",
+                                            padding: "5px 10px",
+                                            fontSize: "12px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "5px",
+                                            cursor: "pointer",
+                                            backdropFilter: "blur(4px)",
+                                            zIndex: 5
+                                        }}
+                                        title="Delete this photo"
+                                    >
+                                        {deletingPhoto ? <LoaderCircle size={13} className="spinning" /> : <Trash2 size={13} />}
+                                        <span>Delete Photo</span>
+                                    </button>
+                                )}
                                 {images.length > 1 && (
                                     <>
                                         <button
@@ -407,7 +473,7 @@ export function PropertyDetailModal({
 
                 {/* Footer Actions */}
                 <div className="modal-footer" style={{ justifyContent: "space-between" }}>
-                    <div>
+                    <div style={{ display: "flex", gap: "8px" }}>
                         {isOwnerOfThis && onOpenManagePhotos && (
                             <button
                                 type="button"
@@ -419,6 +485,21 @@ export function PropertyDetailModal({
                             >
                                 <ImagePlus size={15} />
                                 <span>Upload / Manage Photos</span>
+                            </button>
+                        )}
+
+                        {isOwnerOfThis && onDeleteProperty && (
+                            <button
+                                type="button"
+                                className="btn btn-sm"
+                                style={{ background: "rgba(239, 68, 68, 0.12)", color: "#ef4444", border: "1px solid rgba(239, 68, 68, 0.3)" }}
+                                onClick={() => {
+                                    onClose();
+                                    onDeleteProperty(property);
+                                }}
+                            >
+                                <Trash2 size={14} />
+                                <span>Delete Property</span>
                             </button>
                         )}
                     </div>
