@@ -1,7 +1,8 @@
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import { AuthContext, type PortalMode, type UserInfo } from "./authTypes";
 import type { LoginResponse, UserRole } from "../types/api";
 import { deleteCurrentUserAccount } from "../api/Authapi";
+import { getValidToken, clearAuthStorage, isTokenExpired, parseJwt } from "../utils/token";
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -9,15 +10,8 @@ interface AuthProviderProps {
 
 function parseEmailFromToken(token: string | null): string | null {
     if (!token) return null;
-    try {
-        const parts = token.split(".");
-        if (parts.length < 2) return null;
-        const payloadJson = atob(parts[1]);
-        const payload = JSON.parse(payloadJson);
-        return payload.sub || payload.username || payload.email || null;
-    } catch {
-        return null;
-    }
+    const payload = parseJwt(token);
+    return payload?.sub || payload?.username || payload?.email || null;
 }
 
 function getStoredUser(): UserInfo | null {
@@ -30,8 +24,16 @@ function getStoredUser(): UserInfo | null {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
-    const [user, setUser] = useState<UserInfo | null>(getStoredUser);
+    // Only initialize with a token if it exists AND is not expired
+    const [token, setToken] = useState<string | null>(() => getValidToken());
+    const [user, setUser] = useState<UserInfo | null>(() => {
+        const validToken = getValidToken();
+        if (!validToken) {
+            clearAuthStorage();
+            return null;
+        }
+        return getStoredUser();
+    });
 
     const [portalMode, setPortalModeState] = useState<PortalMode>(() => {
         const saved = localStorage.getItem("portalMode");
@@ -40,6 +42,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (storedUser?.role === "TENANT") return "tenant";
         return "owner";
     });
+
+    // Handle token expiry events and periodic checks
+    useEffect(() => {
+        const handleAuthExpired = () => {
+            clearAuthStorage();
+            setToken(null);
+            setUser(null);
+            setPortalModeState("owner");
+        };
+
+        window.addEventListener("auth:expired", handleAuthExpired);
+
+        // Periodic check every 30 seconds to catch expired tokens in open tabs
+        const intervalId = setInterval(() => {
+            const currentToken = localStorage.getItem("token");
+            if (currentToken && isTokenExpired(currentToken)) {
+                handleAuthExpired();
+            }
+        }, 30000);
+
+        return () => {
+            window.removeEventListener("auth:expired", handleAuthExpired);
+            clearInterval(intervalId);
+        };
+    }, []);
 
     const userEmail = useMemo(() => {
         if (user?.email) return user.email;
@@ -87,9 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("portalMode");
+        clearAuthStorage();
         setToken(null);
         setUser(null);
         setPortalModeState("owner");
@@ -111,7 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 userEmail,
                 userName,
                 userRole: userRole as UserRole | null,
-                isAuthenticated: !!token,
+                isAuthenticated: !isTokenExpired(token),
                 portalMode,
                 setPortalMode,
                 login,

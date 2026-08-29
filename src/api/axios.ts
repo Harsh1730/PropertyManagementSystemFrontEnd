@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getValidToken, clearAuthStorage } from "../utils/token";
 
 const DEFAULT_PROD_API_URL = "https://propertymanagementsystem-production.up.railway.app";
 
@@ -11,10 +12,14 @@ const api = axios.create({
 
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
+        // Automatically check if token is valid and not expired
+        const token = getValidToken();
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+        } else {
+            // Remove any stale authorization header
+            delete config.headers.Authorization;
         }
 
         return config;
@@ -27,13 +32,19 @@ api.interceptors.response.use(
     (error) => {
         const status = error.response?.status;
         const requestUrl = error.config?.url || "";
-        const isAuthUrl = requestUrl.includes("/auth/");
+        const isAuthEndpoint = requestUrl.includes("/auth/login") || requestUrl.includes("/auth/register");
         const currentPath = window.location.pathname;
 
-        if (status === 401 && !isAuthUrl && currentPath !== "/login" && currentPath !== "/register") {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.location.href = "/login";
+        // If 401 unauthorized (token expired / invalid) and not a direct login credential failure
+        if (status === 401 && !isAuthEndpoint) {
+            clearAuthStorage();
+
+            // Notify auth context / other listeners
+            window.dispatchEvent(new Event("auth:expired"));
+
+            if (currentPath !== "/login" && currentPath !== "/register") {
+                window.location.href = "/login";
+            }
         }
 
         return Promise.reject(error);
