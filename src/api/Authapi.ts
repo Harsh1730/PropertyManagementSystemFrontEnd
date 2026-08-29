@@ -4,6 +4,7 @@ import type {
     LoginResponse,
     RegisterRequest,
     RegisterResponse,
+    UserRole,
 } from "../types/api";
 
 export const registerUser = async (
@@ -37,3 +38,20 @@ export const deleteCurrentUserAccount = async (): Promise<{ message: string }> =
     const response = await api.delete<{ message: string }>("/auth/me");
     return response.data;
 };
+
+export interface OAuthGoogleRequest {
+    idToken: string;
+    role?: UserRole;
+}
+
+export const loginWithGoogle = async (
+    payload: OAuthGoogleRequest
+): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>(
+        "/auth/oauth/google",
+        payload
+    );
+
+    return response.data;
+};
+

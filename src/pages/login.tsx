@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, Building2, Sun, Moon } from "lucide-react";
-import { loginUser } from "../api/Authapi";
+import { loginUser, loginWithGoogle } from "../api/Authapi";
 import { getApiErrorMessage } from "../api/error";
 import { useAuth } from "../context/useAuth";
 import { useTheme } from "../context/ThemeContext";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 function Login() {
     const [email, setEmail] = useState("");
@@ -13,9 +14,15 @@ function Login() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { login, isAuthenticated } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/dashboard", { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -32,6 +39,20 @@ function Login() {
             navigate("/dashboard");
         } catch (apiError) {
             setError(getApiErrorMessage(apiError, "Invalid credentials. Please check your email and password."));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (idToken: string) => {
+        setError("");
+        setLoading(true);
+        try {
+            const response = await loginWithGoogle({ idToken });
+            login(response);
+            navigate("/dashboard");
+        } catch (apiError) {
+            setError(getApiErrorMessage(apiError, "Google authentication failed. Please try again."));
         } finally {
             setLoading(false);
         }
@@ -115,6 +136,21 @@ function Login() {
                         <span>{loading ? "Signing in..." : "Sign In"}</span>
                     </button>
                 </form>
+
+                {/* Social Login Divider */}
+                <div style={{ display: "flex", alignItems: "center", margin: "20px 0 16px", gap: "12px" }}>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                    <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>or continue with</span>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                </div>
+
+                {/* Google Sign-In */}
+                <GoogleSignInButton
+                    onSuccess={handleGoogleSuccess}
+                    onError={(err) => setError(err)}
+                    text="continue_with"
+                    disabled={loading}
+                />
 
                 <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     Don't have an account?{" "}

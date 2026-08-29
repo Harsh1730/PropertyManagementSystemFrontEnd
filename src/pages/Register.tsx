@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Building2, Sun, Moon } from "lucide-react";
-import { registerUser } from "../api/Authapi";
+import { registerUser, loginWithGoogle } from "../api/Authapi";
 import { getApiErrorMessage } from "../api/error";
+import { useAuth } from "../context/useAuth";
 import { useTheme } from "../context/ThemeContext";
 import type { UserRole } from "../types/api";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 
 function Register() {
     const [firstName, setFirstName] = useState("");
@@ -19,6 +21,7 @@ function Register() {
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const { login } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
@@ -49,6 +52,21 @@ function Register() {
             setLoading(false);
         }
     };
+
+    const handleGoogleSuccess = async (idToken: string) => {
+        setError("");
+        setLoading(true);
+        try {
+            const response = await loginWithGoogle({ idToken, role });
+            login(response);
+            navigate("/dashboard");
+        } catch (apiError) {
+            setError(getApiErrorMessage(apiError, "Google registration failed. Please try again."));
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     return (
         <main className="auth-container">
@@ -192,6 +210,22 @@ function Register() {
                     </div>
                 </form>
 
+                {/* Social Registration Divider */}
+                <div style={{ display: "flex", alignItems: "center", margin: "20px 0 16px", gap: "12px" }}>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                    <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>or sign up with</span>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                </div>
+
+                {/* Google Sign-In Button */}
+                <GoogleSignInButton
+                    onSuccess={handleGoogleSuccess}
+                    onError={(err) => setError(err)}
+                    text="signup_with"
+                    role={role}
+                    disabled={loading}
+                />
+
                 <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-muted)" }}>
                     Already have an account?{" "}
                     <Link to="/login" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
@@ -200,6 +234,7 @@ function Register() {
                 </div>
             </div>
         </main>
+
     );
 }
 
