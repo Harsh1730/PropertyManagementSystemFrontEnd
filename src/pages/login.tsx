@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useCallback, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LogIn, Building2, Sun, Moon, ArrowLeft } from "lucide-react";
 import { loginUser, loginWithGoogle } from "../api/Authapi";
@@ -44,7 +44,7 @@ function Login() {
         }
     };
 
-    const handleGoogleSuccess = async (idToken: string) => {
+    const handleGoogleSuccess = useCallback(async (idToken: string) => {
         setError("");
         setLoading(true);
         try {
@@ -56,7 +56,7 @@ function Login() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [login, navigate]);
 
     return (
         <main className="auth-container">

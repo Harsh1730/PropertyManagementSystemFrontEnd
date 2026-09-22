@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     Building2,
@@ -13,65 +13,14 @@ import {
     ChevronLeft,
     ChevronRight,
     LogIn,
-    LayoutDashboard
+    LayoutDashboard,
+    Sparkles,
+    ShieldCheck,
+    KeyRound
 } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { useTheme } from "../context/ThemeContext";
-import { getAvailableProperties } from "../api/propertyApi";
-import type { PropertyResponse } from "../types/api";
 import "../styles/landing.css";
-
-// Curated fallback luxury escapes if backend has no active records
-const FALLBACK_PROPERTIES = [
-    {
-        id: 101,
-        propertyName: "Villa Serena Retreat",
-        propertyType: "HOUSE" as const,
-        city: "Rain Town",
-        state: "Montana",
-        address: "971 Coolidge Street",
-        rentAmount: 4200,
-        securityDeposit: 8000,
-        totalUnits: 1,
-        status: "AVAILABLE" as const,
-        bedrooms: 4,
-        bathrooms: 3,
-        imageUrl: "/images/hero-villa.jpg",
-        description: "Minimalist Scandinavian timber and stone villa immersed in natural pine forest with heated infinity pool and warm ambient architecture."
-    },
-    {
-        id: 102,
-        propertyName: "Nordic Obsidian Haven",
-        propertyType: "HOUSE" as const,
-        city: "Whitefish",
-        state: "Montana",
-        address: "142 Alpine Ridge",
-        rentAmount: 3800,
-        securityDeposit: 7000,
-        totalUnits: 1,
-        status: "AVAILABLE" as const,
-        bedrooms: 3,
-        bathrooms: 2,
-        imageUrl: "/images/bento-fireplace.jpg",
-        description: "High-ceiling open concept living with wood burning stove, panoramic mountain glazing, and sunlit lime plaster interiors."
-    },
-    {
-        id: 103,
-        propertyName: "The Slate Sanctuary",
-        propertyType: "FLAT" as const,
-        city: "Bozeman",
-        state: "Montana",
-        address: "550 Canyon Vista",
-        rentAmount: 3100,
-        securityDeposit: 6000,
-        totalUnits: 1,
-        status: "AVAILABLE" as const,
-        bedrooms: 2,
-        bathrooms: 2,
-        imageUrl: "/images/bento-bedroom.jpg",
-        description: "Moody, tactile suite with fluted wood paneling, dark stone textures, and Japanese-inspired platform suite."
-    }
-];
 
 const GALLERY_IMAGES = [
     { url: "/images/hero-villa.jpg", title: "Villa Exterior at Twilight", subtitle: "Rain Town, Montana" },
@@ -116,15 +65,13 @@ export function LandingPage() {
     const [phone, setPhone] = useState("+ (380) 50 561 80 69");
     const [activeTag, setActiveTag] = useState("Mountain Retreat");
 
-    // Dynamic properties from backend API
-    const [properties, setProperties] = useState<PropertyResponse[]>([]);
-
     // Modals
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [selectedProperty, setSelectedProperty] = useState<any>(FALLBACK_PROPERTIES[0]);
     const [showGalleryModal, setShowGalleryModal] = useState(false);
     const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
     const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
+    const [showPricingModal, setShowPricingModal] = useState(false);
 
     // Interactive booking confirmation message
     const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -137,26 +84,7 @@ export function LandingPage() {
         { text: "Warm daylight streaming through timber", highlight: "daylight" }
     ];
 
-    useEffect(() => {
-        let isMounted = true;
-        const fetchProperties = async () => {
-            try {
-                const data = await getAvailableProperties();
-                if (isMounted && data && data.length > 0) {
-                    setProperties(data);
-                }
-            } catch {
-                // Keep fallbacks
-            }
-        };
-        void fetchProperties();
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    const handleOpenBooking = (property?: any) => {
-        if (property) setSelectedProperty(property);
+    const handleOpenBooking = () => {
         setShowBookingModal(true);
     };
 
@@ -182,8 +110,6 @@ export function LandingPage() {
         setComfortSlide((prev) => (prev - 1 + comfortTexts.length) % comfortTexts.length);
     };
 
-    const displayProps = properties.length > 0 ? properties.slice(0, 3) : FALLBACK_PROPERTIES;
-
     return (
         <div className="landing-page">
             {/* 1. FLOATING NAVIGATION BAR */}
@@ -198,6 +124,7 @@ export function LandingPage() {
                         </Link>
                     </div>
 
+                    {/* Navbar menu strictly matching the reference image */}
                     <nav className="landing-nav-center">
                         <button type="button" className="landing-nav-link active">
                             Home
@@ -205,15 +132,20 @@ export function LandingPage() {
                         <a href="#about" className="landing-nav-link">
                             About
                         </a>
-                        <a href="#how-it-works" className="landing-nav-link">
+                        <button
+                            type="button"
+                            className="landing-nav-link"
+                            onClick={() => setShowHowItWorksModal(true)}
+                        >
                             How it works
-                        </a>
-                        <a href="#escapes" className="landing-nav-link">
-                            Properties
-                        </a>
-                        <a href="#pricing" className="landing-nav-link">
+                        </button>
+                        <button
+                            type="button"
+                            className="landing-nav-link"
+                            onClick={() => setShowPricingModal(true)}
+                        >
                             Pricing
-                        </a>
+                        </button>
                     </nav>
 
                     <div className="landing-nav-right">
@@ -269,6 +201,9 @@ export function LandingPage() {
                             <h1 className="landing-hero-title">
                                 Plan Your<br />Escape
                             </h1>
+                            <div className="landing-hero-motto">
+                                Discover. Book. Stay.
+                            </div>
                         </div>
 
                         {/* Right Side Pill Tags */}
@@ -323,7 +258,7 @@ export function LandingPage() {
                             <button
                                 type="button"
                                 className="booking-btn-book"
-                                onClick={() => handleOpenBooking()}
+                                onClick={handleOpenBooking}
                             >
                                 <span>Book a House</span>
                                 <ArrowUpRight size={17} />
@@ -338,7 +273,16 @@ export function LandingPage() {
                 </div>
             </section>
 
-            {/* 3. SECTION: /About house (Bento Grid) */}
+            {/* 3. THREE SIMPLE WORDS BANNER */}
+            <div className="landing-simple-summary">
+                <div className="simple-summary-badge">What We Do</div>
+                <h2 className="simple-summary-words">Discover. Book. Stay.</h2>
+                <p className="simple-summary-desc">
+                    Handpicked architectural retreats. Seamless reservations. Effortless living.
+                </p>
+            </div>
+
+            {/* 4. SECTION: /About house (Bento Grid) */}
             <section id="about" className="landing-about-section">
                 <div className="landing-section-header">
                     <h2 className="landing-section-title">/About house</h2>
@@ -409,8 +353,8 @@ export function LandingPage() {
                             <button
                                 type="button"
                                 className="bento-circle-btn"
-                                onClick={() => handleOpenBooking()}
-                                title="Pin location"
+                                onClick={handleOpenBooking}
+                                title="Book Suite"
                             >
                                 <MapPin size={17} />
                             </button>
@@ -418,7 +362,7 @@ export function LandingPage() {
                                 type="button"
                                 className="bento-circle-btn"
                                 onClick={() => setShowGalleryModal(true)}
-                                title="Explore Suite"
+                                title="Explore Gallery"
                             >
                                 <Compass size={17} />
                             </button>
@@ -430,10 +374,13 @@ export function LandingPage() {
                         <div className="bento-tag-badge">
                             <span>Mountain Retreat</span>
                         </div>
-                        <div className="bento-quote-text">
-                            One <span className="highlight">simple</span> booking, endless moments of{" "}
-                            <span className="highlight">peace</span> and <span className="highlight">beauty</span>
-                            <ArrowUpRight size={18} className="bento-quote-arrow" />
+                        <div style={{ marginTop: "16px" }}>
+                            <div className="bento-card-triad">Discover. Book. Stay.</div>
+                            <div className="bento-quote-text">
+                                One <span className="highlight">simple</span> booking, endless moments of{" "}
+                                <span className="highlight">peace</span> and <span className="highlight">beauty</span>
+                                <ArrowUpRight size={18} className="bento-quote-arrow" />
+                            </div>
                         </div>
                     </div>
 
@@ -485,160 +432,27 @@ export function LandingPage() {
                 </div>
             </section>
 
-            {/* 4. CURATED ESCAPES (AVAILABLE PROPERTIES) */}
-            <section id="escapes" className="landing-properties-section">
-                <div className="landing-section-header">
-                    <h2 className="landing-section-title">Curated Escapes</h2>
-                    <p className="landing-section-subtitle">
-                        Handcrafted sanctuaries engineered for stillness, architectural beauty, and restorative living.
-                    </p>
-                </div>
-
-                <div className="featured-properties-grid">
-                    {displayProps.map((prop) => (
-                        <div key={prop.id} className="featured-prop-card">
-                            <div className="featured-prop-image-wrap">
-                                <img
-                                    src={((prop as any).imageUrls && (prop as any).imageUrls[0]) || (prop as any).imageUrl || "/images/hero-villa.jpg"}
-                                    alt={prop.propertyName}
-                                    className="featured-prop-image"
-                                />
-                                <div className="featured-prop-tag">{prop.propertyType}</div>
-                                <div className="featured-prop-price-badge">
-                                    ${((prop as any).rentAmount || (prop as any).monthlyRent || 3800)?.toLocaleString()}/mo
-                                </div>
-                            </div>
-                            <div className="featured-prop-body">
-                                <div>
-                                    <h3 className="featured-prop-name">{prop.propertyName}</h3>
-                                    <div className="featured-prop-location">
-                                        <MapPin size={15} />
-                                        <span>
-                                            {prop.city}, {prop.state || "Montana"}
-                                        </span>
-                                    </div>
-                                    <p style={{ fontSize: "0.86rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                                        {(prop as any).description || "Architectural sanctuary with natural light and refined finishes."}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <div className="featured-prop-meta">
-                                        <span>{(prop as any).bedrooms || 3} Bedrooms</span>
-                                        <span>•</span>
-                                        <span>{(prop as any).bathrooms || 2} Bathrooms</span>
-                                        <span>•</span>
-                                        <span>Verified Stay</span>
-                                    </div>
-
-                                    <div className="featured-prop-action-row">
-                                        <button
-                                            type="button"
-                                            className="btn-reserve-prop"
-                                            onClick={() => handleOpenBooking(prop)}
-                                        >
-                                            <span>Reserve House</span>
-                                            <ArrowUpRight size={15} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+            {/* 5. MINIMAL SIMPLE FOOTER */}
+            <footer className="landing-footer-simple">
+                <div className="footer-simple-content">
+                    <div className="landing-brand">
+                        <div className="landing-brand-logo">
+                            <Building2 size={16} />
                         </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 5. EXPERIENCE & HOW IT WORKS */}
-            <section id="how-it-works" className="landing-experience-section">
-                <div className="landing-section-header">
-                    <h2 className="landing-section-title">The Effortless Journey</h2>
-                    <p className="landing-section-subtitle">
-                        From discovering architectural sanctuaries to digital leases and intelligent keyless entry.
-                    </p>
-                </div>
-
-                <div className="experience-grid">
-                    <div className="experience-card">
-                        <div className="experience-step-num">01</div>
-                        <h3 className="experience-card-title">Curated Discovery</h3>
-                        <p className="experience-card-desc">
-                            Every villa and sanctuary is handpicked for architectural integrity, natural seclusion, and tactile comfort.
-                        </p>
+                        <span className="landing-brand-name">EstateFlow</span>
                     </div>
 
-                    <div className="experience-card">
-                        <div className="experience-step-num">02</div>
-                        <h3 className="experience-card-title">Instant Digital Lease</h3>
-                        <p className="experience-card-desc">
-                            Seamless paperless contracts, encrypted deposit handling, and direct owner messaging in one unified portal.
-                        </p>
+                    <div className="footer-three-words">
+                        Discover • Book • Stay
                     </div>
 
-                    <div className="experience-card">
-                        <div className="experience-step-num">03</div>
-                        <h3 className="experience-card-title">24/7 Concierge Care</h3>
-                        <p className="experience-card-desc">
-                            Automated maintenance dispatches, local culinary recommendations, and high-touch hospitality throughout your stay.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* 6. FOOTER */}
-            <footer className="landing-footer">
-                <div className="landing-footer-grid">
-                    <div>
-                        <div className="landing-brand">
-                            <div className="landing-brand-logo">
-                                <Building2 size={18} />
-                            </div>
-                            <span className="landing-brand-name">EstateFlow</span>
-                        </div>
-                        <p className="footer-brand-desc">
-                            High-end retreat living and modern property management designed for architectural enthusiasts and discerning owners.
-                        </p>
-                    </div>
-
-                    <div>
-                        <h4 className="footer-col-title">Navigation</h4>
-                        <ul className="footer-links-list">
-                            <li><a href="#about" className="footer-link">About House</a></li>
-                            <li><a href="#escapes" className="footer-link">Featured Stays</a></li>
-                            <li><a href="#how-it-works" className="footer-link">How It Works</a></li>
-                            <li><Link to="/login" className="footer-link">Owner & Tenant Login</Link></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 className="footer-col-title">Locations</h4>
-                        <ul className="footer-links-list">
-                            <li><span className="footer-link">Rain Town, Montana</span></li>
-                            <li><span className="footer-link">Aspen Valley, Colorado</span></li>
-                            <li><span className="footer-link">Nordic Coast, Oregon</span></li>
-                            <li><span className="footer-link">Sedona Ridge, Arizona</span></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 className="footer-col-title">Contact</h4>
-                        <ul className="footer-links-list">
-                            <li><a href="tel:+620995368973" className="footer-link">+62 (099) 536 8973</a></li>
-                            <li><a href="mailto:concierge@estateflow.luxury" className="footer-link">concierge@estateflow.luxury</a></li>
-                            <li><span className="footer-link">971 Coolidge Street, MT</span></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div className="landing-footer-bottom">
-                    <div>&copy; {new Date().getFullYear()} EstateFlow Retreats & Property Management. All rights reserved.</div>
-                    <div style={{ display: "flex", gap: "16px" }}>
-                        <a href="#privacy" className="footer-link">Privacy Policy</a>
-                        <a href="#terms" className="footer-link">Terms of Hospitality</a>
+                    <div className="footer-simple-copy">
+                        &copy; {new Date().getFullYear()} EstateFlow. All rights reserved.
                     </div>
                 </div>
             </footer>
 
-            {/* 7. MODALS */}
+            {/* 6. MODALS */}
             {/* Booking Reservation Modal */}
             {showBookingModal && (
                 <div className="modal-overlay" onClick={() => setShowBookingModal(false)}>
@@ -653,7 +467,7 @@ export function LandingPage() {
 
                         <h3 className="modal-header-serif">Reserve Your Escape</h3>
                         <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "24px" }}>
-                            {selectedProperty ? selectedProperty.propertyName : "Villa Serena Retreat"} • Rain Town, MT
+                            Villa Serena Retreat • 971 Coolidge Street, Rain Town, MT
                         </p>
 
                         {bookingSuccess ? (
@@ -675,7 +489,7 @@ export function LandingPage() {
                                     Inquiry Received!
                                 </h4>
                                 <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "6px" }}>
-                                    Redirecting to your dashboard to complete your reservation...
+                                    Redirecting to dashboard...
                                 </p>
                             </div>
                         ) : (
@@ -738,25 +552,6 @@ export function LandingPage() {
                                             color: "var(--text-primary)"
                                         }}
                                         required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>
-                                        Special Requests / Notes
-                                    </label>
-                                    <textarea
-                                        rows={3}
-                                        placeholder="Tell us about your stay, party size, or architectural preferences..."
-                                        style={{
-                                            width: "100%",
-                                            padding: "10px 12px",
-                                            borderRadius: "var(--radius-sm)",
-                                            border: "1px solid var(--border-medium)",
-                                            backgroundColor: "var(--bg-input)",
-                                            color: "var(--text-primary)",
-                                            resize: "vertical"
-                                        }}
                                     />
                                 </div>
 
@@ -886,6 +681,164 @@ export function LandingPage() {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* How It Works Modal */}
+            {showHowItWorksModal && (
+                <div className="modal-overlay" onClick={() => setShowHowItWorksModal(false)}>
+                    <div className="luxury-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            className="luxury-modal-close"
+                            onClick={() => setShowHowItWorksModal(false)}
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <h3 className="modal-header-serif">How It Works</h3>
+                        <p style={{ color: "var(--accent)", fontWeight: 600, fontSize: "1.1rem", marginBottom: "24px" }}>
+                            Discover. Book. Stay.
+                        </p>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                                <div style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "var(--accent-subtle)",
+                                    color: "var(--accent)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0
+                                }}>
+                                    <Sparkles size={20} />
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                                        1. Discover
+                                    </h4>
+                                    <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.5 }}>
+                                        Explore curated modern villas and architectural sanctuaries designed for tranquility and comfort.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                                <div style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "var(--accent-subtle)",
+                                    color: "var(--accent)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0
+                                }}>
+                                    <ShieldCheck size={20} />
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                                        2. Book
+                                    </h4>
+                                    <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.5 }}>
+                                        Select your dates, submit instant reservation requests, and sign digital leases securely online.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                                <div style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "var(--accent-subtle)",
+                                    color: "var(--accent)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0
+                                }}>
+                                    <KeyRound size={20} />
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: "1.05rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                                        3. Stay
+                                    </h4>
+                                    <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", marginTop: "4px", lineHeight: 1.5 }}>
+                                        Enjoy keyless smart check-in, 24/7 dedicated concierge maintenance, and peaceful retreat living.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Pricing Modal */}
+            {showPricingModal && (
+                <div className="modal-overlay" onClick={() => setShowPricingModal(false)}>
+                    <div className="luxury-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            className="luxury-modal-close"
+                            onClick={() => setShowPricingModal(false)}
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <h3 className="modal-header-serif">Transparent Rates</h3>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "24px" }}>
+                            Bespoke retreat pricing with all utilities, maintenance, and concierge included.
+                        </p>
+
+                        <div style={{
+                            padding: "20px",
+                            borderRadius: "var(--radius-xl)",
+                            backgroundColor: "var(--bg-subtle)",
+                            border: "1px solid var(--border-subtle)",
+                            marginBottom: "16px"
+                        }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                                <strong style={{ fontSize: "1.1rem", color: "var(--text-primary)" }}>Villa Serena Retreat</strong>
+                                <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", color: "var(--accent)", fontWeight: 700 }}>
+                                    $4,200<span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 400 }}> / month</span>
+                                </span>
+                            </div>
+                            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "8px" }}>
+                                4 Bedrooms • 3 Bathrooms • Infinity Heated Pool • Rain Town, Montana
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowPricingModal(false);
+                                handleOpenBooking();
+                            }}
+                            style={{
+                                width: "100%",
+                                padding: "12px",
+                                borderRadius: "var(--radius-pill)",
+                                backgroundColor: "var(--primary)",
+                                color: "var(--primary-text)",
+                                fontWeight: 600,
+                                fontSize: "0.92rem",
+                                border: "none",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
+                            }}
+                        >
+                            <span>Book at this rate</span>
+                            <ArrowUpRight size={16} />
+                        </button>
                     </div>
                 </div>
             )}

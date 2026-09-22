@@ -47,6 +47,15 @@ export function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
     const buttonRef = useRef<HTMLDivElement>(null);
     const [scriptLoaded, setScriptLoaded] = useState(false);
+    const hasRenderedRef = useRef(false);
+
+    // Keep callback refs fresh without triggering useEffect re-runs
+    const onSuccessRef = useRef(onSuccess);
+    const onErrorRef = useRef(onError);
+    useEffect(() => {
+        onSuccessRef.current = onSuccess;
+        onErrorRef.current = onError;
+    });
 
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
     const isConfigured = Boolean(clientId && !clientId.includes("placeholder"));
@@ -75,13 +84,13 @@ export function GoogleSignInButton({
         script.defer = true;
         script.onload = () => setScriptLoaded(true);
         script.onerror = () => {
-            if (onError) onError("Failed to load Google Sign-In SDK");
+            if (onErrorRef.current) onErrorRef.current("Failed to load Google Sign-In SDK");
         };
         document.head.appendChild(script);
-    }, [isConfigured, onError]);
+    }, [isConfigured]);
 
     useEffect(() => {
-        if (!isConfigured || !scriptLoaded || !buttonRef.current || !window.google?.accounts?.id) {
+        if (!isConfigured || !scriptLoaded || !buttonRef.current || !window.google?.accounts?.id || hasRenderedRef.current) {
             return;
         }
 
@@ -90,9 +99,9 @@ export function GoogleSignInButton({
                 client_id: clientId,
                 callback: (response) => {
                     if (response.credential) {
-                        onSuccess(response.credential);
+                        onSuccessRef.current(response.credential);
                     } else {
-                        if (onError) onError("Google Sign-In failed to return credentials");
+                        if (onErrorRef.current) onErrorRef.current("Google Sign-In failed to return credentials");
                     }
                 },
                 auto_select: false,
@@ -109,10 +118,11 @@ export function GoogleSignInButton({
                 logo_alignment: "left",
                 width: 320,
             });
+            hasRenderedRef.current = true;
         } catch (e) {
             console.error("Google button initialization error:", e);
         }
-    }, [isConfigured, scriptLoaded, clientId, text, onSuccess, onError]);
+    }, [isConfigured, scriptLoaded, clientId, text]);
 
     if (!isConfigured) {
         return (
@@ -120,8 +130,8 @@ export function GoogleSignInButton({
                 type="button"
                 className="btn"
                 onClick={() => {
-                    if (onError) {
-                        onError("Google OAuth Client ID is not configured yet. Please add VITE_GOOGLE_CLIENT_ID to your .env file.");
+                    if (onErrorRef.current) {
+                        onErrorRef.current("Google OAuth Client ID is not configured yet. Please add VITE_GOOGLE_CLIENT_ID to your .env file.");
                     }
                 }}
                 style={{
@@ -137,7 +147,8 @@ export function GoogleSignInButton({
                     borderRadius: "8px",
                     cursor: "pointer",
                     fontSize: "14px",
-                    fontWeight: 500
+                    fontWeight: 500,
+                    height: "44px"
                 }}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -163,10 +174,9 @@ export function GoogleSignInButton({
         );
     }
 
-
     return (
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? "none" : "auto" }}>
-            <div ref={buttonRef} style={{ minHeight: "44px", width: "100%", display: "flex", justifyContent: "center" }} />
+        <div style={{ width: "100%", height: "44px", minHeight: "44px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? "none" : "auto" }}>
+            <div ref={buttonRef} style={{ height: "44px", minHeight: "44px", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }} />
         </div>
     );
 }

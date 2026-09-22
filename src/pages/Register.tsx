@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Building2, Sun, Moon, ArrowLeft } from "lucide-react";
 import { registerUser, loginWithGoogle } from "../api/Authapi";
@@ -53,7 +53,7 @@ function Register() {
         }
     };
 
-    const handleGoogleSuccess = async (idToken: string) => {
+    const handleGoogleSuccess = useCallback(async (idToken: string) => {
         setError("");
         setLoading(true);
         try {
@@ -65,7 +65,7 @@ function Register() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [login, navigate, role]);
 
 
     return (

@@ -6,6 +6,10 @@
     padding: 0;
 }
 
+html {
+    scrollbar-gutter: stable;
+}
+
 html, body, #root {
     width: 100%;
     min-height: 100vh;
