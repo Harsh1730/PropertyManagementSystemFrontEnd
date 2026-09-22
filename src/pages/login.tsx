@@ -51,8 +51,16 @@ function Login() {
             const response = await loginWithGoogle({ idToken });
             login(response);
             navigate("/dashboard");
-        } catch (apiError) {
-            setError(getApiErrorMessage(apiError, "Google authentication failed. Please try again."));
+        } catch (apiError: any) {
+            console.error("Google authentication error:", apiError);
+            const serverMsg = getApiErrorMessage(apiError, "");
+            if (serverMsg) {
+                setError(serverMsg);
+            } else if (apiError?.message === "Network Error" || !apiError?.response) {
+                setError("Unable to connect to backend (Network/CORS error). Please verify backend status and CORS settings.");
+            } else {
+                setError("Google authentication failed. Please verify your Google Cloud OAuth origins and credentials.");
+            }
         } finally {
             setLoading(false);
         }
