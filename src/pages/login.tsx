@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, Building2, Sun, Moon } from "lucide-react";
+import { LogIn, Building2, Sun, Moon, ArrowLeft } from "lucide-react";
 import { loginUser, loginWithGoogle } from "../api/Authapi";
 import { getApiErrorMessage } from "../api/error";
 import { useAuth } from "../context/useAuth";
@@ -60,13 +60,38 @@ function Login() {
 
     return (
         <main className="auth-container">
+            {/* Back to Escapes Link Top-Left */}
+            <Link
+                to="/"
+                style={{
+                    position: "absolute",
+                    top: "24px",
+                    left: "24px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "0.86rem",
+                    color: "var(--text-secondary)",
+                    textDecoration: "none",
+                    fontWeight: 500,
+                    padding: "6px 14px",
+                    borderRadius: "var(--radius-pill)",
+                    backgroundColor: "var(--bg-surface)",
+                    border: "1px solid var(--border-subtle)",
+                    boxShadow: "var(--shadow-xs)"
+                }}
+            >
+                <ArrowLeft size={16} />
+                <span>Return to Escapes</span>
+            </Link>
+
             {/* Theme Toggle Top-Right */}
             <button
                 type="button"
                 className="theme-toggle-btn"
                 onClick={toggleTheme}
                 style={{ position: "absolute", top: "20px", right: "20px" }}
-                title={`Switch to ${theme === "light" ? "Charcoal Dark" : "Clean Light"} Theme`}
+                title={`Switch to ${theme === "light" ? "Nocturnal Dusk" : "Warm Linen"} Theme`}
             >
                 {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
             </button>
@@ -77,7 +102,7 @@ function Login() {
                         <Building2 size={20} />
                     </div>
                     <h1 className="auth-title">EstateFlow</h1>
-                    <p className="auth-subtitle">Sign in to your property management dashboard</p>
+                    <p className="auth-subtitle">Sign in to your luxury retreat & management dashboard</p>
                 </div>
 
                 {error && (

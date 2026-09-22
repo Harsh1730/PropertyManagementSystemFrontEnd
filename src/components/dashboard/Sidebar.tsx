@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
     LayoutDashboard,
     Building2,
@@ -94,15 +95,18 @@ export function Sidebar({
         <aside className="sidebar">
             {/* Header */}
             <div className="sidebar-header">
-                <div className="sidebar-brand">
+                <Link to="/" className="sidebar-brand" title="View Public Retreats Showcase">
                     <div className="brand-icon-box">
                         <Building2 size={18} />
                     </div>
                     <div>
                         <div className="brand-title">EstateFlow</div>
-                        <div className="brand-tagline">Property SaaS</div>
+                        <div className="brand-tagline">
+                            <span>Retreats & PMS</span>
+                            <span style={{ marginLeft: "4px", fontSize: "10px", color: "var(--accent)" }}>↗</span>
+                        </div>
                     </div>
-                </div>
+                </Link>
             </div>
 
             {/* Portal Switcher Tabs */}

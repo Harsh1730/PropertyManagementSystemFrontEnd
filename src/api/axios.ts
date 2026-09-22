@@ -1,11 +1,13 @@
 import axios from "axios";
 import { getValidToken, clearAuthStorage } from "../utils/token";
 
-const DEFAULT_PROD_API_URL = "https://propertymanagementsystem-production.up.railway.app";
+const DEFAULT_PROD_API_URL = "http://localhost:8080";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API_URL : ""),
+    // baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API_URL : ""),
+    baseURL: DEFAULT_PROD_API_URL,
     headers: {
+
         "Content-Type": "application/json",
     },
 });

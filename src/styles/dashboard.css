@@ -70,19 +70,21 @@
 }
 
 .brand-icon-box {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    background-color: var(--primary);
-    color: var(--primary-text);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e59a4b, #bd681d);
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(229, 154, 75, 0.35);
 }
 
 .brand-title {
-    font-size: 15px;
+    font-family: var(--font-serif);
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--text-primary);
@@ -91,7 +93,7 @@
 .brand-tagline {
     font-size: 11px;
     color: var(--text-muted);
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .sidebar-toggle-btn {
@@ -1283,48 +1285,55 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 32px 24px;
     background-color: var(--bg-app);
+    position: relative;
 }
 
 .auth-form-card {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 36px 32px;
+    border-radius: var(--radius-2xl);
+    padding: 42px 36px;
     width: 100%;
     max-width: 440px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    z-index: 10;
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 .auth-brand-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    background-color: var(--primary);
-    color: var(--primary-text);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e59a4b, #bd681d);
+    color: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 16px rgba(229, 154, 75, 0.35);
 }
 
 .auth-title {
-    font-size: 20px;
-    font-weight: 600;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 26px;
+    font-weight: 500;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
 }
 
 .auth-subtitle {
-    font-size: 13px;
+    font-size: 13.5px;
     color: var(--text-muted);
-    margin-top: 4px;
+    margin-top: 6px;
+    line-height: 1.45;
 }
 
 .auth-role-tabs {

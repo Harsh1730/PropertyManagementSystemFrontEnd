@@ -6,12 +6,15 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Dashboard from "./pages/Dashboard.tsx";
 
+import LandingPage from "./pages/LandingPage";
+
 function App() {
     return (
         <ThemeProvider>
             <AuthProvider>
                 <BrowserRouter>
                 <Routes>
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
 
@@ -23,13 +26,8 @@ function App() {
                     </Route>
 
                     <Route
-                        path="/"
-                        element={<Navigate to="/dashboard" replace />}
-                    />
-
-                    <Route
                         path="*"
-                        element={<Navigate to="/dashboard" replace />}
+                        element={<Navigate to="/" replace />}
                     />
                 </Routes>
             </BrowserRouter>
